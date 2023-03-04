@@ -12,23 +12,42 @@ from dash import Dash, dcc, html
 import dash_core_components as dcc
 from dash import Input, Output
 from dash import dash_table
+import datetime
+import plotly.graph_objects as go
+
 #from dash import dcc
 #from dash_html_template import Template
 
-data = (
-    pd.read_csv("sp500_data.csv")
-    .assign(Date=lambda data: pd.to_datetime(data["Date"], format="%d-%b-%y"))
-    .sort_values(by="Date")
-)
+
+import data_manager
 
 
-all_options =  ['S&P 500', 'Timber Prices', 'Unemployment', "Housing Supply", "Housing Costs"]
 
+all_options =  ['S&P-500', 'Timber Prices', 'Unemployment', "Housing Supply", "Housing Costs"]
 table_dict = {"Data Evaluated": "test", "Correlation Coefficient": 0.65}
 table_array = ["Data Set 1", "Data Set 2", "Correlation Coefficient"]
 
 
-print(data.head())
+
+"""Import all data here"""
+SP500_data = data_manager.get_sp500_data()
+interest_data = data_manager.get_interest_rate_data()
+house_supply_data = data_manager.get_house_supply_data()
+
+
+
+"""Merging data here... may or may not use"""
+# Place the DataFrames side by side
+combined_data = pd.concat([SP500_data, interest_data], axis=1)
+#print(combined_data.head())
+
+joined_data = SP500_data.merge(interest_data, on='Date') #, how='inner'
+#print(joined_data.head())
+#print(joined_data.columns)
+
+
+
+
 
 
 external_stylesheets = [
@@ -38,7 +57,7 @@ external_stylesheets = [
             "family=Lato:wght@400;700&display=swap"
         ),
         "rel": "stylesheet",
-    },
+    }
 ]
 
 
@@ -85,8 +104,8 @@ app.layout = html.Div(
                         #),
                         dcc.Checklist(
                            id="select-checklist",
-                           options=['S&P 500', 'Timber Prices', 'Unemployment', "Housing Supply", "Housing Costs"],
-                           value=['S&P 500']
+                           options=['SP500_data', 'Timber Prices', 'Unemployment', "Housing Supply", "Housing Costs", "interest_data"],
+                           value=['SP500_data', "interest_data"]
                         )
                     ]
                 ),
@@ -94,9 +113,7 @@ app.layout = html.Div(
             className="menu",
         ),
         
-        
-        
-            
+    
         # inteactive visualization div
         html.Div(
             children=[
@@ -128,15 +145,10 @@ app.layout = html.Div(
                                                  #   for j in range(5)
                                                  #]
                                                  ),
-                                                 
-                className="wrapper",
+                                                className="wrapper",
                 )
-                
             ]
         )
-    
-    
-    
     ]
 )
 
@@ -148,19 +160,38 @@ app.layout = html.Div(
     Output("price-chart-2", "figure"),
     Input("select-checklist", "value")
 )
-def update_charts(data_type):
+def update_charts(checked_data_sources):
+    
+    
+    
+    """This dynamically adds a new line for each data source checked on the gui"""
+    line_plots = []
+    for i in range(len(checked_data_sources)):
+        if(checked_data_sources[i] == "SP500_data"):
+            line_plots.append(go.Scatter(
+                {
+                    "x": SP500_data["Date"],  #, house_supply_data['DATE']
+                    "y": SP500_data["Close*"],  #, house_supply_data['MSACSR']
+                    "type": "lines",
+                    "name": "SP500_data",
+                    "line": dict(color="red")
+                }))
+        if(checked_data_sources[i] == "interest_data"):
+            line_plots.append(go.Scatter(
+                {
+                    "x": interest_data["Date"],  #, house_supply_data['DATE']
+                    "y": interest_data["Effective Federal Funds Rate"],  #, house_supply_data['MSACSR']
+                    "type": "lines",
+                    "name": "interest_data",
+                    "line": dict(color="blue")
+                }))
+    
+    
     price_chart_figure = {
-        
-        "data": [
-            {
-                "x": data["Date"],
-                "y": data["Close*"],
-                "type": "lines"
-            },
-        ],
+        "data": line_plots,
         "layout": 
             {"title": { 
-                    "text": f"{data_type}",
+                    "text": f"{checked_data_sources}",
                     "x": 20,
                     "xanchor": "left"
                     },
@@ -177,6 +208,37 @@ if __name__ == "__main__":
     
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    """
+            "data": [go.Scatter(
+            {
+                "x": SP500_data["Date"],  #, house_supply_data['DATE']
+                "y": SP500_data["Close*"],  #, house_supply_data['MSACSR']
+                "type": "lines",
+                "name": "S&P 500"
+            },
+        ),
+            go.Scatter(
+            {
+                "x": interest_data["Date"],  #, house_supply_data['DATE']
+                "y": interest_data["Effective Federal Funds Rate"],  #, house_supply_data['MSACSR']
+                "type": "lines",
+                "name": "Interest Rates",
+                "fill": "none",  # ['none', 'tozeroy', 'tozerox', 'tonexty', 'tonextx','toself', 'tonext']
+                "line": dict(color="red")
+            },
+                )
+            ],
+    """
     
     
     
