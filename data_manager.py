@@ -43,7 +43,7 @@ def normalize_data(data):
 
 def get_sp500_data():
     SP500_data = (
-        pd.read_csv("data/sp500_data.csv")
+        pd.read_csv("data/Federal/sp500_data.csv")
         .assign(Date=lambda data: pd.to_datetime(data["Date"], format="%Y-%m-%d"))
         .sort_values(by="Date")
     )
@@ -72,7 +72,7 @@ def get_sp500_data():
 
 def get_interest_rate_data():
     interest_data = (
-        pd.read_csv("data/kaggle_fed_interest_rate_1954.csv", usecols = ['Year', 'Month', 'Day', 'Effective Federal Funds Rate'])
+        pd.read_csv("data/Federal/kaggle_fed_interest_rate_1954.csv", usecols = ['Year', 'Month', 'Day', 'Effective Federal Funds Rate'])
         #.assign(Date=lambda data: pd.to_datetime(data["Date"], format="%Y-%m-%d"))
         #.sort_values(by="Date")
     )
@@ -103,9 +103,9 @@ def get_interest_rate_data():
     #print(interest_data['Effective Federal Funds Rate'].isna().sum())
     
     """Filling nan values - this looks way better"""
-    print(interest_data['Effective Federal Funds Rate'].isna().sum())
+    #print(interest_data['Effective Federal Funds Rate'].isna().sum())
     interest_data['Effective Federal Funds Rate'] = interest_data['Effective Federal Funds Rate'].ffill()
-    print(interest_data['Effective Federal Funds Rate'].isna().sum())
+    #print(interest_data['Effective Federal Funds Rate'].isna().sum())
     
     normalized_interest_rate = normalize_data(interest_data['Effective Federal Funds Rate'])
     interest_data['Effective Federal Funds Rate'] = normalized_interest_rate
@@ -125,7 +125,7 @@ def get_interest_rate_data():
 
 def get_house_supply_data():
     interest_data = (
-        pd.read_csv("data/supply_of_new_houses.csv")
+        pd.read_csv("data/Federal/supply_of_new_houses.csv")
         .assign(DATE=lambda data: pd.to_datetime(data["DATE"], format="%Y-%m-%d"))
         .sort_values(by="DATE")
     )
@@ -136,8 +136,8 @@ def get_house_supply_data():
     
     # The months' supply indicates how long the current new for-sale inventory would last given the current sales rate if no additional new houses were built
     
-    print(interest_data.head())
-    print(interest_data.tail())
+    #print(interest_data.head())
+    #print(interest_data.tail())
     
     return interest_data
 
@@ -146,7 +146,7 @@ def get_house_supply_data():
 
 def get_lumber_price_data():
     lumber_data = (
-        pd.read_csv("data/WPU_wood_lumber_prices.csv")
+        pd.read_csv("data/Federal/WPU_wood_lumber_prices.csv")
         .assign(DATE=lambda data: pd.to_datetime(data["DATE"], format="%Y-%m-%d"))
         .sort_values(by="DATE")
     )
@@ -155,10 +155,8 @@ def get_lumber_price_data():
     
     lumber_data.rename(columns={"DATE": "Date"}, inplace=True) # Rename DATE to Date for consistency
     
-    # The months' supply indicates how long the current new for-sale inventory would last given the current sales rate if no additional new houses were built
-    
-    print(lumber_data.head())
-    print(lumber_data.tail())
+    #print(lumber_data.head())
+    #print(lumber_data.tail())
     
     return lumber_data
 
@@ -167,9 +165,43 @@ def get_lumber_price_data():
 
 
 
+def get_house_price_index_data():
+    hpi_data = (
+        pd.read_csv("data/Federal/Fed_house_price_index.csv")
+        .assign(DATE=lambda data: pd.to_datetime(data["DATE"], format="%Y-%m-%d"))
+        .sort_values(by="DATE")
+    )
+        
+    hpi_data["USSTHPI"] = normalize_data(hpi_data['USSTHPI'])
+    
+    hpi_data.rename(columns={"DATE": "Date"}, inplace=True) # Rename DATE to Date for consistency
+    
+    #print(hpi_data.head())
+    #print(hpi_data.tail())
+    
+    return hpi_data
 
 
-
+def get_unemployment_data():
+    unemployment_data = (
+        pd.read_csv("data/Federal/federal_unemployment.csv")
+        .assign(Date=lambda data: pd.to_datetime(data["Label"], format="%Y %b"))
+        .sort_values(by="Date")
+    )
+    
+    # Label - 1950 Jan
+    # normalize Value
+    
+    unemployment_data["Value"] = normalize_data(unemployment_data['Value'])
+    
+    #unemployment_data.rename(columns={"Label": "Date"}, inplace=True) # Rename Label to Date for consistency
+    
+    unemployment_data.drop(columns={"Series ID", "Year", "Period", "Label"}, inplace=True)
+    unemployment_data.reset_index(drop=True, inplace=True)
+    print(unemployment_data.head())
+    print(unemployment_data.tail())
+    
+    return unemployment_data
 
 
 

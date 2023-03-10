@@ -23,7 +23,7 @@ import data_manager
 
 
 # Filter options
-all_options =  ["SP500_data", "lumber_data", "Unemployment", "house_supply_data", "Housing Costs", "interest_data"]
+all_options =  ["hpi_data", "SP500_data", "lumber_data", "unemployment_data", "house_supply_data", "interest_data"]
 
 # Dummy data to fill the table
 table_dict = {"Data Evaluated": "test", "Correlation Coefficient": 0.65}
@@ -36,6 +36,9 @@ SP500_data = data_manager.get_sp500_data()
 interest_data = data_manager.get_interest_rate_data()
 house_supply_data = data_manager.get_house_supply_data()
 lumber_data = data_manager.get_lumber_price_data()
+hpi_data = data_manager.get_house_price_index_data()
+unemployment_data = data_manager.get_unemployment_data()
+
 
 
 """Merging data here... may or may not use"""
@@ -104,7 +107,7 @@ app.layout = html.Div(
                         dcc.Checklist(
                            id="select-checklist",
                            options=all_options,
-                           value=["SP500_data", "interest_data", "house_supply_data", "lumber_data"]
+                           value=["hpi_data", "SP500_data", "interest_data", "house_supply_data", "lumber_data", "unemployment_data"]
                         )
                     ]
                 ),
@@ -204,7 +207,26 @@ def update_charts(checked_data_sources):
                     "name": "lumber_data",
                     "line": dict(color="purple")
                 }))
-        # WPU081
+            
+        if(checked_data_sources[i] == "hpi_data"):
+            line_plots.append(go.Scatter(
+                {
+                    "x": hpi_data["Date"],
+                    "y": hpi_data["USSTHPI"], 
+                    "type": "lines",
+                    "name": "hpi_data",
+                    "line": dict(color="black")
+                }))
+        if(checked_data_sources[i] == "unemployment_data"):
+            line_plots.append(go.Scatter(
+                {
+                    "x": unemployment_data["Date"],
+                    "y": unemployment_data["Value"], 
+                    "type": "lines",
+                    "name": "unemployment_data",
+                    "line": dict(color="green")
+                }))
+        # unemployment_data
             
     """This returns the figure on update"""
     price_chart_figure = {
@@ -213,8 +235,8 @@ def update_charts(checked_data_sources):
         "layout": 
             {"title": { 
                     "text": f"{checked_data_sources}",
-                    "x": 20,
-                    "xanchor": "left"
+                    "x": 20
+                    #"xanchor": "left"
                     },
              "xaxis": {"fixedrange": True},
              "yaxis": {
