@@ -8,6 +8,7 @@ Created on Fri Mar  3 17:44:42 2023
 from sklearn import preprocessing
 import pandas as pd
 import sys
+import numpy as np
 
 
 START_YEAR = 1950
@@ -17,15 +18,25 @@ END_YEAR = 2023
 
 def normalize_data(data):
     
-    normalized_data = preprocessing.normalize([data])
-    
+    # This is returning different ranges of outputs....
+    #normalized_data = preprocessing.normalize([data])
     
     #scaler = preprocessing.MinMaxScaler()
     #scaler.fit(data) # Compute the minimum and maximum to be used for later scaling.
     #scaler.transform(data) # Scale features of X according to feature_range.
-    
     #return  scaler.transform(data)
-    return normalized_data
+    
+    # By-hand calculation
+    # zi = (xi – min(x)) / (max(x) – min(x)) * 100
+    data = (data - min(data)) / (max(data) - min(data)) * 100
+    #print("data before calculation: ")
+    #print(data)
+    #print("max data: ")
+    #print(max(data))
+    #print("min data: ")
+    #print(min(data))
+    
+    return data
     
 
 
@@ -40,7 +51,7 @@ def get_sp500_data():
     #print(SP500_data.head())
     #print(SP500_data.columns)
     #print(SP500_data.tail())
-    
+    print(SP500_data.head())
     # Getting rid of the commas in the numbers for casting
     SP500_data['Close*'] = SP500_data['Close*'].str.replace(",", "")
     
@@ -49,7 +60,7 @@ def get_sp500_data():
     
     # Normalize data
     test = normalize_data(SP500_data['Close*'])
-    SP500_data['Close*'] = test[0]
+    SP500_data['Close*'] = test
     
     SP500_data.drop(columns=['Open', 'High', 'Low', 'Adj Close**', 'Volume'], inplace=True)
     
@@ -79,8 +90,6 @@ def get_interest_rate_data():
     """The federal funds rate is the interest rate at which depository institutions trade federal funds 
     (balances held at Federal Reserve Banks) with each other overnight."""
     
-    
-    
     """Filling nan values with forward fill - this looks really bad for some reason"""
     #print(interest_data['Effective Federal Funds Rate'].isna().sum())
     #interest_data = interest_data.ffill(axis=1)
@@ -93,16 +102,13 @@ def get_interest_rate_data():
     #interest_data['Effective Federal Funds Rate'].fillna(value=mean, inplace=True)
     #print(interest_data['Effective Federal Funds Rate'].isna().sum())
     
-    """Filling nan values - this looks really bad for some reason"""
+    """Filling nan values - this looks way better"""
     print(interest_data['Effective Federal Funds Rate'].isna().sum())
     interest_data['Effective Federal Funds Rate'] = interest_data['Effective Federal Funds Rate'].ffill()
     print(interest_data['Effective Federal Funds Rate'].isna().sum())
     
-    
-    
     normalized_interest_rate = normalize_data(interest_data['Effective Federal Funds Rate'])
-    interest_data['Effective Federal Funds Rate'] = normalized_interest_rate[0]
-    
+    interest_data['Effective Federal Funds Rate'] = normalized_interest_rate
     
     interest_data.drop(columns=['Year', 'Month', 'Day'], inplace=True)
     
@@ -120,13 +126,18 @@ def get_interest_rate_data():
 def get_house_supply_data():
     interest_data = (
         pd.read_csv("data/supply_of_new_houses.csv")
-        .assign(Date=lambda data: pd.to_datetime(data["DATE"], format="%Y-%m-%d"))
+        .assign(DATE=lambda data: pd.to_datetime(data["DATE"], format="%Y-%m-%d"))
         .sort_values(by="DATE")
     )
+        
+    interest_data["MSACSR"] = normalize_data(interest_data['MSACSR'])
     
-    #print(interest_data.head())
-    #print(interest_data.tail())
+    interest_data.rename(columns={"DATE": "Date"}, inplace=True) # Rename DATE to Date for consistency
     
+    # The months' supply indicates how long the current new for-sale inventory would last given the current sales rate if no additional new houses were built
+    
+    print(interest_data.head())
+    print(interest_data.tail())
     
     return interest_data
 

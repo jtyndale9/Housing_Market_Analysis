@@ -22,8 +22,10 @@ import plotly.graph_objects as go
 import data_manager
 
 
+# Filter options
+all_options =  ["SP500_data", "Timber Prices", "Unemployment", "house_supply_data", "Housing Costs", "interest_data"]
 
-all_options =  ['S&P-500', 'Timber Prices', 'Unemployment', "Housing Supply", "Housing Costs"]
+# Dummy data to fill the table
 table_dict = {"Data Evaluated": "test", "Correlation Coefficient": 0.65}
 table_array = ["Data Set 1", "Data Set 2", "Correlation Coefficient"]
 
@@ -40,7 +42,6 @@ house_supply_data = data_manager.get_house_supply_data()
 # Place the DataFrames side by side
 combined_data = pd.concat([SP500_data, interest_data], axis=1)
 #print(combined_data.head())
-
 joined_data = SP500_data.merge(interest_data, on='Date') #, how='inner'
 #print(joined_data.head())
 #print(joined_data.columns)
@@ -68,6 +69,8 @@ app = Dash(__name__, external_stylesheets=external_stylesheets)
 app.layout = html.Div(
     children=[
         
+        
+        
         # Header div
         html.Div(
             children=[
@@ -88,7 +91,7 @@ app.layout = html.Div(
         
         
         
-        # Drop Down div
+        # Filter check box div
         html.Div(
             children=[
                 html.Div(
@@ -104,8 +107,8 @@ app.layout = html.Div(
                         #),
                         dcc.Checklist(
                            id="select-checklist",
-                           options=['SP500_data', 'Timber Prices', 'Unemployment', "Housing Supply", "Housing Costs", "interest_data"],
-                           value=['SP500_data', "interest_data"]
+                           options=all_options,
+                           value=["SP500_data", "interest_data", "house_supply_data"]
                         )
                     ]
                 ),
@@ -114,7 +117,8 @@ app.layout = html.Div(
         ),
         
     
-        # inteactive visualization div
+    
+        # inteactive line plot visualization div
         html.Div(
             children=[
                 html.Div(
@@ -129,7 +133,9 @@ app.layout = html.Div(
             ]
         ),
     
-        # inteactive visualization div
+    
+    
+        # table  div
         html.Div(
             children=[
                 html.Div(
@@ -162,33 +168,42 @@ app.layout = html.Div(
 )
 def update_charts(checked_data_sources):
     
-    
-    
     """This dynamically adds a new line for each data source checked on the gui"""
     line_plots = []
     for i in range(len(checked_data_sources)):
         if(checked_data_sources[i] == "SP500_data"):
             line_plots.append(go.Scatter(
                 {
-                    "x": SP500_data["Date"],  #, house_supply_data['DATE']
-                    "y": SP500_data["Close*"],  #, house_supply_data['MSACSR']
+                    "x": SP500_data["Date"], 
+                    "y": SP500_data["Close*"], 
                     "type": "lines",
                     "name": "SP500_data",
                     "line": dict(color="red")
+                    
                 }))
         if(checked_data_sources[i] == "interest_data"):
             line_plots.append(go.Scatter(
                 {
-                    "x": interest_data["Date"],  #, house_supply_data['DATE']
-                    "y": interest_data["Effective Federal Funds Rate"],  #, house_supply_data['MSACSR']
+                    "x": interest_data["Date"],
+                    "y": interest_data["Effective Federal Funds Rate"],  
                     "type": "lines",
                     "name": "interest_data",
                     "line": dict(color="blue")
                 }))
-    
-    
+        if(checked_data_sources[i] == "house_supply_data"):
+            line_plots.append(go.Scatter(
+                {
+                    "x": house_supply_data["Date"],
+                    "y": house_supply_data["MSACSR"], 
+                    "type": "lines",
+                    "name": "house_supply_data",
+                    "line": dict(color="orange")
+                }))
+            
+    """This returns the figure on update"""
     price_chart_figure = {
-        "data": line_plots,
+        "data": line_plots, # Set data equal to line plot data array defined above
+        
         "layout": 
             {"title": { 
                     "text": f"{checked_data_sources}",
@@ -196,7 +211,10 @@ def update_charts(checked_data_sources):
                     "xanchor": "left"
                     },
              "xaxis": {"fixedrange": True},
-             "yaxis": {"tickprefix": "$","fixedrange": True},
+             "yaxis": {
+                 "tickprefix": "$",
+                 "fixedrange": True,
+                 'showticklabels': False},
              "colorway": ["#17b897"]
             }
         }
@@ -239,8 +257,6 @@ if __name__ == "__main__":
                 )
             ],
     """
-    
-    
     
     
     """
