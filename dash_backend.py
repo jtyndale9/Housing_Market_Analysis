@@ -23,7 +23,7 @@ import data_manager
 
 
 # Filter options
-all_options =  ["SP500_data", "Timber Prices", "Unemployment", "house_supply_data", "Housing Costs", "interest_data"]
+all_options =  ["SP500_data", "lumber_data", "Unemployment", "house_supply_data", "Housing Costs", "interest_data"]
 
 # Dummy data to fill the table
 table_dict = {"Data Evaluated": "test", "Correlation Coefficient": 0.65}
@@ -35,7 +35,7 @@ table_array = ["Data Set 1", "Data Set 2", "Correlation Coefficient"]
 SP500_data = data_manager.get_sp500_data()
 interest_data = data_manager.get_interest_rate_data()
 house_supply_data = data_manager.get_house_supply_data()
-
+lumber_data = data_manager.get_lumber_price_data()
 
 
 """Merging data here... may or may not use"""
@@ -45,10 +45,6 @@ combined_data = pd.concat([SP500_data, interest_data], axis=1)
 joined_data = SP500_data.merge(interest_data, on='Date') #, how='inner'
 #print(joined_data.head())
 #print(joined_data.columns)
-
-
-
-
 
 
 external_stylesheets = [
@@ -108,7 +104,7 @@ app.layout = html.Div(
                         dcc.Checklist(
                            id="select-checklist",
                            options=all_options,
-                           value=["SP500_data", "interest_data", "house_supply_data"]
+                           value=["SP500_data", "interest_data", "house_supply_data", "lumber_data"]
                         )
                     ]
                 ),
@@ -177,7 +173,7 @@ def update_charts(checked_data_sources):
                     "x": SP500_data["Date"], 
                     "y": SP500_data["Close*"], 
                     "type": "lines",
-                    "name": "SP500_data",
+                    "name": "S&P 500",
                     "line": dict(color="red")
                     
                 }))
@@ -187,7 +183,7 @@ def update_charts(checked_data_sources):
                     "x": interest_data["Date"],
                     "y": interest_data["Effective Federal Funds Rate"],  
                     "type": "lines",
-                    "name": "interest_data",
+                    "name": "Fed Interest Rate",
                     "line": dict(color="blue")
                 }))
         if(checked_data_sources[i] == "house_supply_data"):
@@ -196,9 +192,19 @@ def update_charts(checked_data_sources):
                     "x": house_supply_data["Date"],
                     "y": house_supply_data["MSACSR"], 
                     "type": "lines",
-                    "name": "house_supply_data",
+                    "name": "House Supply -MSACSR",
                     "line": dict(color="orange")
                 }))
+        if(checked_data_sources[i] == "lumber_data"):
+            line_plots.append(go.Scatter(
+                {
+                    "x": lumber_data["Date"],
+                    "y": lumber_data["WPU081"], 
+                    "type": "lines",
+                    "name": "lumber_data",
+                    "line": dict(color="purple")
+                }))
+        # WPU081
             
     """This returns the figure on update"""
     price_chart_figure = {
@@ -212,13 +218,23 @@ def update_charts(checked_data_sources):
                     },
              "xaxis": {"fixedrange": True},
              "yaxis": {
-                 "tickprefix": "$",
+                 #"tickprefix": "$",
                  "fixedrange": True,
                  'showticklabels': False},
              "colorway": ["#17b897"]
             }
         }
     return price_chart_figure
+
+
+
+
+
+
+
+
+
+
 
 
 if __name__ == "__main__":

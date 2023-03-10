@@ -143,3 +143,40 @@ def get_house_supply_data():
 
 
 
+
+def get_lumber_price_data():
+    lumber_data = (
+        pd.read_csv("data/WPU_wood_lumber_prices.csv")
+        .assign(DATE=lambda data: pd.to_datetime(data["DATE"], format="%Y-%m-%d"))
+        .sort_values(by="DATE")
+    )
+        
+    lumber_data["WPU081"] = normalize_data(lumber_data['WPU081'])
+    
+    lumber_data.rename(columns={"DATE": "Date"}, inplace=True) # Rename DATE to Date for consistency
+    
+    # The months' supply indicates how long the current new for-sale inventory would last given the current sales rate if no additional new houses were built
+    
+    print(lumber_data.head())
+    print(lumber_data.tail())
+    
+    return lumber_data
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
