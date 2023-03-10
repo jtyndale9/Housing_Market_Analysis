@@ -198,10 +198,54 @@ def get_unemployment_data():
     
     unemployment_data.drop(columns={"Series ID", "Year", "Period", "Label"}, inplace=True)
     unemployment_data.reset_index(drop=True, inplace=True)
-    print(unemployment_data.head())
-    print(unemployment_data.tail())
+    #print(unemployment_data.head())
+    #print(unemployment_data.tail())
     
     return unemployment_data
+
+
+
+
+
+def get_correlation_dataframe():
+    
+    
+    
+    
+    # n(n-1) / 2 is the amount of unique combinations
+    
+    data_sets_col_a = ["hpi_data", "hpi_data", "hpi_data", "hpi_data", "hpi_data", 
+                 "SP500_data", "SP500_data", "SP500_data", "SP500_data", 
+                 "lumber_data", "lumber_data", "lumber_data", 
+                 "unemployment_data", "unemployment_data", 
+                 "house_supply_data"]
+    
+    data_sets_col_b = ["SP500_data", "lumber_data", "unemployment_data", "house_supply_data", "interest_data",
+                        "lumber_data", "unemployment_data", "house_supply_data", "interest_data",
+                        "unemployment_data", "house_supply_data", "interest_data",
+                        "house_supply_data", "interest_data",
+                        "interest_data"]
+    
+    correlations = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+    
+    #table_df["Data Set 1"] = data_sets_col_a
+    #table_df["Data Set 2"] = data_sets_col_b
+    #table_df["Correlation Coefficient"] = correlations
+    
+    table_df = pd.DataFrame({"Data_Set_1": data_sets_col_a, "Data_Set_2": data_sets_col_b, "Correlation_Coefficient": correlations})
+    print(table_df.head())
+    print(table_df.columns)
+    #table_df = pd.DataFrame(columns=["Data Set 1", "Data Set 2", "Correlation Coefficient"])
+    
+    return table_df
+
+
+
+
+
+
+
+
 
 
 
