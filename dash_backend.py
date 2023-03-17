@@ -9,7 +9,8 @@ Created on Thu Feb 23 14:04:57 2023
 
 import pandas as pd
 from dash import Dash, dcc, html
-import dash_core_components as dcc
+#import dash_core_components as dcc
+from dash import dcc
 from dash import Input, Output
 from dash import dash_table
 import datetime
@@ -40,8 +41,8 @@ hpi_data = data_manager.get_house_price_index_data()
 unemployment_data = data_manager.get_unemployment_data()
 
 correlation_data = data_manager.get_correlation_dataframe()
-print(correlation_data.head())
-print(correlation_data.columns)
+#print(correlation_data.head())
+#print(correlation_data.columns)
 
 
 external_stylesheets = [
@@ -101,7 +102,7 @@ app.layout = html.Div(
                         dcc.Checklist(
                            id="select-checklist",
                            options=all_options,
-                           value=["hpi_data", "SP500_data", "interest_data", "house_supply_data", "lumber_data", "unemployment_data"]
+                           value=["hpi_data", "SP500_data", "lumber_data"]
                         )
                     ]
                 ),
@@ -174,7 +175,7 @@ def update_charts(checked_data_sources):
             line_plots.append(go.Scatter(
                 {
                     "x": interest_data["Date"],
-                    "y": interest_data["Effective Federal Funds Rate"],  
+                    "y": interest_data["FEDFUNDS"],  
                     "type": "lines",
                     "name": "Fed Interest Rate",
                     "line": dict(color="blue")
@@ -273,7 +274,7 @@ def update_table(checked_data_sources):
 
 
 if __name__ == "__main__":
-    app.run_server(host="0.0.0.0", debug=False)
+    app.run_server(host="0.0.0.0", debug=False, port="8000")
     
     
     
