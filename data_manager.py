@@ -5,16 +5,9 @@ Created on Fri Mar  3 17:44:42 2023
 @author: john4
 """
 
-#from sklearn import preprocessing
 import pandas as pd
-import sys
-import numpy as np
 import datetime as dt
-import matplotlib.pyplot as plt
 
-
-START_YEAR = 1950
-END_YEAR = 2023
 
 state_map = {'AK': 'Alaska', 'AL': 'Alabama', 'AR': 'Arkansas', 'AZ': 'Arizona', 'CA': 'California',
              'CO': 'Colorado', 'CT': 'Connecticut', 'DC': 'District of Columbia', 'DE': 'Delaware',
@@ -29,22 +22,11 @@ state_map = {'AK': 'Alaska', 'AL': 'Alabama', 'AR': 'Arkansas', 'AZ': 'Arizona',
              'VT': 'Vermont', 'WA': 'Washington', 'WI': 'Wisconsin', 'WV': 'West Virginia', 'WY': 'Wyoming'}
 
 def normalize_data(data):
-    
-    # This is returning different ranges of outputs....
-    #normalized_data = preprocessing.normalize([data])
-    
-    #scaler = preprocessing.MinMaxScaler()
-    #scaler.fit(data) # Compute the minimum and maximum to be used for later scaling.
-    #scaler.transform(data) # Scale features of X according to feature_range.
-    #return  scaler.transform(data)
-    
-    # By-hand calculation
+    # Min-max scale to 0-100 so indicators with different units share one axis
     # zi = (xi – min(x)) / (max(x) – min(x)) * 100
     data = (data - min(data)) / (max(data) - min(data)) * 100
-
-    
     return data
-    
+
 
 def get_rental_data():
     rental_data = (
@@ -53,7 +35,6 @@ def get_rental_data():
         .sort_values(by="Date")
     )
     rental_data = rental_data[['Date', 'CUSR0000SEHA']]
-    #print(rental_data)
     rental_data['CUSR0000SEHA'] = normalize_data(rental_data['CUSR0000SEHA'])
     rental_data = rental_data[(rental_data['Date'] > dt.datetime(1974,12,31)) & ((rental_data['Date'] < dt.datetime(2022,11,1)))]
     return rental_data
@@ -66,7 +47,6 @@ def get_savings_data():
         .sort_values(by="Date")
     )
     savings_data = savings_data[['Date', 'PSAVERT']]
-    #print(savings_data)
     savings_data['PSAVERT'] = normalize_data(savings_data['PSAVERT'])
     savings_data = savings_data[(savings_data['Date'] > dt.datetime(1974,12,31)) & ((savings_data['Date'] < dt.datetime(2022,11,1)))]
     return savings_data
@@ -80,7 +60,6 @@ def get_rental_vac_data():
         .sort_values(by="Date")
     )
     rental_vac_data = rental_vac_data[['Date', 'RRVRUSQ156N']]
-    #print(rental_vac_data)
     rental_vac_data['RRVRUSQ156N'] = normalize_data(rental_vac_data['RRVRUSQ156N'])
     rental_vac_data = rental_vac_data[(rental_vac_data['Date'] > dt.datetime(1974,12,31)) & ((rental_vac_data['Date'] < dt.datetime(2022,11,1)))]
     return rental_vac_data
@@ -92,7 +71,6 @@ def get_labor_part_data():
         .sort_values(by="Date")
     )
     labor_part_data = labor_part_data[['Date', 'CIVPART']]
-    #print(labor_part_data)
     labor_part_data['CIVPART'] = normalize_data(labor_part_data['CIVPART'])
     labor_part_data = labor_part_data[(labor_part_data['Date'] > dt.datetime(1974,12,31)) & ((labor_part_data['Date'] < dt.datetime(2022,11,1)))]
     return labor_part_data
@@ -104,7 +82,6 @@ def get_cpi_data():
         .sort_values(by="Date")
     )
     cpi_data = cpi_data[['Date', 'CPIAUCSL']]
-    #print(cpi_data)
     cpi_data['CPIAUCSL'] = normalize_data(cpi_data['CPIAUCSL'])
     cpi_data = cpi_data[(cpi_data['Date'] > dt.datetime(1974,12,31)) & ((cpi_data['Date'] < dt.datetime(2022,11,1)))]
     return cpi_data
@@ -141,13 +118,10 @@ def get_sp500_data():
     SP500_data['Close*'] = SP500_data['Close*'].astype(float)
     
     # Normalize data
-    test = normalize_data(SP500_data['Close*'])
-    SP500_data['Close*'] = test
-    
+    SP500_data['Close*'] = normalize_data(SP500_data['Close*'])
+
     SP500_data.drop(columns=['Open', 'High', 'Low', 'Adj Close**', 'Volume'], inplace=True)
-    
-    
-    #SP500_data = SP500_data[SP500_data['Date'] > pd.Timestamp(1975,1,1)]
+
     SP500_data = SP500_data[(SP500_data['Date'] > dt.datetime(1974,12,31)) & ((SP500_data['Date'] < dt.datetime(2022,11,1)))] # Only include data after 1975
     SP500_data.reset_index(drop=True, inplace=True)
     
@@ -159,31 +133,10 @@ def get_interest_rate_data():
         .assign(Date=lambda data: pd.to_datetime(data["DATE"], format="%Y-%m-%d"))
         .sort_values(by="Date")
     )
-    
-    """Turn the Year, Month, Day columns into a single date column that is properly formatted"""
-    #interest_data['Date'] = interest_data['Year'].astype(str) + '-' + interest_data['Month'].astype(str).str.zfill(2) + '-' + interest_data['Day'].astype(str).str.zfill(2)
-    
-    #interest_data = interest_data.assign(Date=lambda data: pd.to_datetime(data["Date"], format="%Y-%m-%d")) #, inplace=True
-    
-    
-    """The federal funds rate is the interest rate at which depository institutions trade federal funds 
-    (balances held at Federal Reserve Banks) with each other overnight."""
-    
-    """Filling nan values with forward fill - this looks really bad for some reason"""
-    #interest_data = interest_data.ffill(axis=1)
-    
-    
-    """Filling nan values with mean - doesnt look great"""
-    #print(interest_data['Effective Federal Funds Rate'].isna().sum())
-    #mean = interest_data['Effective Federal Funds Rate'].mean()
-    #interest_data['Effective Federal Funds Rate'].fillna(value=mean, inplace=True)
-    
-    """Filling nan values - this looks way better"""
-    #print(interest_data['Effective Federal Funds Rate'].isna().sum())
-    #interest_data['Effective Federal Funds Rate'] = interest_data['Effective Federal Funds Rate'].ffill()
-    
-    normalized_interest_rate = normalize_data(interest_data['FEDFUNDS'])
-    interest_data['FEDFUNDS'] = normalized_interest_rate
+
+    # The federal funds rate is the interest rate at which depository institutions trade federal funds
+    # (balances held at Federal Reserve Banks) with each other overnight.
+    interest_data['FEDFUNDS'] = normalize_data(interest_data['FEDFUNDS'])
     
     interest_data.drop(columns=['DATE'], inplace=True)
     
@@ -251,12 +204,7 @@ def get_unemployment_data():
         .sort_values(by="Date")
     )
     
-    # Label - 1950 Jan
-    # normalize Value
-    
     unemployment_data["Value"] = normalize_data(unemployment_data['Value'])
-    
-    #unemployment_data.rename(columns={"Label": "Date"}, inplace=True) # Rename Label to Date for consistency
     
     unemployment_data.drop(columns={"Series ID", "Year", "Period", "Label"}, inplace=True)
     unemployment_data.reset_index(drop=True, inplace=True)
@@ -266,13 +214,6 @@ def get_unemployment_data():
     
     return unemployment_data
 
-
-def get_home_ownership_data():
-    home_ownership_data = (
-        pd.read_csv("data/Federal/federal_unemployment.csv")
-            .assign(Date=lambda data: pd.to_datetime(data["Label"], format="%Y %b"))
-            .sort_values(by="Date")
-    )
 
 """State Data"""
 
@@ -325,25 +266,16 @@ def load_data(state_code):
 
     # Reset index
     unemployment_data.reset_index(drop=True, inplace=True)
-    # unemployment_data.to_csv("data/State/unemp_state.csv", index=False)
     return unemployment_data
-# data = load_data('CA')
-# print("data",data)
 
 def unemployment_data():
-    # Returns a map from state code (string) to datafarme for unemp data for that state.
+    # Returns a map from state code (string) to dataframe for that state.
     unemp_data_per_state = {}
     for key,value in state_map.items():
         unemp_data_per_state[state_map[key]] = load_data(key)
-        # print(unemp_data_per_state[key])
     return unemp_data_per_state
 
 def load_data_hpi(state_code):
-
-    #Testing CA and FL (yet to add other data)
-    # if state_code != 'CA':
-    #     return
-
     hpi_data_state = pd.read_csv("data/State/HPI_state_data/" + state_code + "STHPI.csv")
     hpi_data_state["Date"] = pd.to_datetime(hpi_data_state["DATE"], format="%Y-%m-%d")
     hpi_data_state.rename(columns={hpi_data_state.columns[1]: 'hpi'}, inplace=True)
@@ -366,37 +298,6 @@ def hpi_data_state():
         hpi_data_per_state[state_map[key]] = load_data_hpi(key)
     return hpi_data_per_state
 
-# def  load_housing_permit_data(state_code):
-#
-#     housing_permits = pd.read_csv("data/State/Private_Housing_unit_permit/" + state_code + "BPPRIVSA.csv")
-#     housing_permits["Date"] = pd.to_datetime(housing_permits["DATE"], format="%Y-%m-%d")
-#
-#     housing_permits.drop(columns=["DATE"], inplace=True)
-#     housing_permits.rename(columns={housing_permits.columns[1]: 'value'}, inplace=True)
-#     housing_permits.sort_values(by="Date", inplace=True)
-#     # print(housing_permits["value"].dtype)
-#
-#     # housing_permits["value"] = normalize_data(housing_permits["value"])
-#
-#     # Filter data by date
-#     housing_permits = housing_permits[
-#         (housing_permits["Date"] > start_date) & (housing_permits["Date"] < end_date)]
-#
-#     # Reset index
-#
-#     housing_permits.reset_index(drop=True, inplace=True)
-#     print(housing_permits.head())
-#
-#     return housing_permits
-#
-# def housing_permits_state():
-#     # Returns a map from state code (string) to datafarme for unemp data for that state.
-#     housing_permits_state = {}
-#     for key,value in state_map.items():
-#         housing_permits_state[state_map[key]] = load_housing_permit_data(key)
-#         # print(unemp_data_per_state[key])
-#     return housing_permits_state
-
 def  load_min_wage_rate(state_code):
     if state_code == 'AL' or  state_code == 'LA' or  state_code == 'TN' or state_code == 'MS' or state_code == 'SC':
         return
@@ -417,12 +318,11 @@ def  load_min_wage_rate(state_code):
     return min_wage_data
 
 def min_wage_rate():
-    # Returns a map from state code (string) to datafarme for unemp data for that state.
+    # Returns a map from state code (string) to dataframe for that state.
 
     min_wage_rate = {}
     for key,value in state_map.items():
         min_wage_rate[state_map[key]] = load_min_wage_rate(key)
-        # print(unemp_data_per_state[key])
     return min_wage_rate
 
 def  load_rental_vacancy_rate(state_code):
@@ -444,24 +344,18 @@ def  load_rental_vacancy_rate(state_code):
     return rental_vacancy_data
 
 def rental_vacancy_rate():
-    # Returns a map from state code (string) to datafarme for unemp data for that state.
+    # Returns a map from state code (string) to dataframe for that state.
     rental_vacancy_rate = {}
     for key,value in state_map.items():
         rental_vacancy_rate[state_map[key]] = load_rental_vacancy_rate(key)
-        # print(unemp_data_per_state[key])
     return rental_vacancy_rate
 
 """End state data"""
-# data = housing_permits_state()
-
-
-
 
 
 def get_correlation_to_hpi():
     
-    hpi = ["Housing Price Index"]
-    data_sets_col_a = hpi * 11
+    data_sets_col_a = ["Housing Price Index"] * 11
     
     data_sets_col_b = ["S&P 500", 
                        "Lumber Prices",
@@ -475,10 +369,8 @@ def get_correlation_to_hpi():
                        "Rental Vacancies",
                        "Labor Participation"]
     
-    correlations = [1,2,3,4,5,6,7,8,9,10,11]
-    
-    hpi = get_house_price_index_data() #["USSTHPI"]
-    sp500 = get_sp500_data() #['Close*']
+    hpi = get_house_price_index_data()
+    sp500 = get_sp500_data()
     unemployment = get_unemployment_data()
     lumber = get_lumber_price_data()
     supply = get_house_supply_data()
@@ -510,15 +402,15 @@ def get_correlation_to_hpi():
     permit_data = permit_data.resample('MS').ffill()
     permit_data['Date'] = permit_data.index
     permit_data.reset_index(drop=True, inplace=True)
-    fill = pd.DataFrame({'Date': pd.date_range(dt.datetime(2022,1,1), dt.datetime(2022,10,1), freq='M')})
+    fill = pd.DataFrame({'Date': pd.date_range(dt.datetime(2022,1,1), dt.datetime(2022,10,1), freq='ME')})
     fill['Total'] = [65] * 9
-    permit_data = permit_data.append(fill)
+    permit_data = pd.concat([permit_data, fill])
     permit_data.reset_index(drop=True, inplace=True)
     
     """Fill in missing dates"""
-    fill = pd.DataFrame({'Date': pd.date_range(dt.datetime(1975,1,1), dt.datetime(1980,12,31), freq='M')})
+    fill = pd.DataFrame({'Date': pd.date_range(dt.datetime(1975,1,1), dt.datetime(1980,12,31), freq='ME')})
     fill['CUSR0000SEHA'] = [0] * 72
-    rental_data = fill.append(rental_data)
+    rental_data = pd.concat([fill, rental_data])
     rental_data.reset_index(drop=True, inplace=True)
     
     """Resample rental vacancy data"""
@@ -534,7 +426,6 @@ def get_correlation_to_hpi():
                                    "Lumber Prices": lumber["WPU081"], 
                                    "Housing Supply": supply['MSACSR'], 
                                    "Interest Rate": interest['FEDFUNDS'],
-                                   
                                    "Building Permits": permit_data['Total'], 
                                    "Consumer Price Index": cpi_data['CPIAUCSL'], 
                                    "Rent Prices": rental_data['CUSR0000SEHA'], 
@@ -542,104 +433,8 @@ def get_correlation_to_hpi():
                                    "Rental Vacancies": rental_vacancies_data['RRVRUSQ156N'], 
                                    "Labor Participation": labor_participation_data['CIVPART']})
     
-    correlations_df = correlation_df.corr()
+    correlations = [round(correlation_df[a].corr(correlation_df[b]), 4)
+                    for a, b in zip(data_sets_col_a, data_sets_col_b)]
 
-    
-    for i, item in enumerate(data_sets_col_a):
-        correlations[i] = round(correlation_df[data_sets_col_a[i]].corr(correlation_df[data_sets_col_b[i]]), 4)
-        
     table_df = pd.DataFrame({"Data_Set_1": data_sets_col_a, "Data_Set_2": data_sets_col_b, "Correlation_Coefficient": correlations})
-    print(table_df)
     return table_df
-
-def get_correlation_dataframe():
-    
-    # n(n-1) / 2 is the amount of unique combinations
-    
-    data_sets_col_a = ["Housing Price Index", "Housing Price Index", "Housing Price Index", "Housing Price Index", "Housing Price Index", 
-                 "S&P 500", "S&P 500", "S&P 500", "S&P 500", 
-                 "Lumber Prices", "Lumber Prices", "Lumber Prices", 
-                 "Unemployment Rate", "Unemployment Rate", 
-                 "Housing Supply"]
-    
-    data_sets_col_b = ["S&P 500", "Lumber Prices", "Unemployment Rate", "Housing Supply", "Interest Rate",
-                        "Lumber Prices", "Unemployment Rate", "Housing Supply", "Interest Rate",
-                        "Unemployment Rate", "Housing Supply", "Interest Rate",
-                        "Housing Supply", "Interest Rate",
-                        "Interest Rate"]
-
-    
-    correlations = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
-    
-    
-    #correlation_test_a = np.corrcoef(x, y)
-    hpi = get_house_price_index_data() #["USSTHPI"]
-    sp500 = get_sp500_data() #['Close*']
-    unemployment = get_unemployment_data()
-    lumber = get_lumber_price_data()
-    supply = get_house_supply_data()
-    interest = get_interest_rate_data()
-    
-    
-    """Resampling HPI data so that it is the same length as the other data.
-       Changing from one data point per quarter to one data point per month
-       forward filling the data"""
-    # HPI data is sampled every quarter. so 4 data points per year.
-    hpi = hpi.set_index('Date')
-    hpi = hpi.resample('MS').ffill()
-    hpi['Date'] = hpi.index
-    hpi.reset_index(drop=True, inplace=True)
-    
-    """Resample for once a month, using the mean."""
-    sp500 = sp500.set_index('Date')
-    sp500 = sp500.resample('MS').mean()
-    sp500['Date'] = sp500.index
-    sp500.reset_index(drop=True, inplace=True)
-    
-    #print('-----------correlations-------------')
-    
-    correlation_df = pd.DataFrame({"Housing Price Index": hpi['USSTHPI'], 
-                                   "S&P 500": sp500['Close*'], 
-                                   "Unemployment Rate": unemployment['Value'], 
-                                   "Lumber Prices": lumber["WPU081"], 
-                                   "Housing Supply": supply['MSACSR'], 
-                                   "Interest Rate": interest['FEDFUNDS'] })
-    
-    #correlations_df = correlation_df.corr()
-    #print(correlations_df)
-    
-    
-    for i, item in enumerate(data_sets_col_a):
-        correlations[i] = round(correlation_df[data_sets_col_a[i]].corr(correlation_df[data_sets_col_b[i]]), 4)
-    
-
-    #hpi_sp500_correlation = np.corrcoef(hpi["USSTHPI"], sp500['Close*'])
-    #print(hpi_sp500_correlation)
-    
-    
-    #table_df["Data Set 1"] = data_sets_col_a
-    #table_df["Data Set 2"] = data_sets_col_b
-    #table_df["Correlation Coefficient"] = correlations
-    #print(hpi_sp500_correlation)
-    
-    table_df = pd.DataFrame({"Data_Set_1": data_sets_col_a, "Data_Set_2": data_sets_col_b, "Correlation_Coefficient": correlations})
-
-    return table_df
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

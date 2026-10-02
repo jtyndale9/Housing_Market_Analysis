@@ -5,8 +5,8 @@ https://finance.yahoo.com/quote/%5EGSPC/history/
 federal_unemployment.csv
 https://beta.bls.gov/dataViewer/view/timeseries/LNS14000000
 
-kaggle_fed_interest_rate_1954.csv
-https://www.kaggle.com/datasets/federalreserve/interest-rates?resource=download
+FED_FUNDS_interest_rate.csv
+https://fred.stlouisfed.org/series/FEDFUNDS
 
 supply_of_new_houses.csv
 https://fred.stlouisfed.org/series/MSACSR

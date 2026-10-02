@@ -5,25 +5,16 @@ Created on Thu Feb 23 14:04:57 2023
 @author: e417027
 """
 
-# app.py
-
 import pandas as pd
 from dash import Dash, dcc, html
-# import dash_core_components as dcc
-from dash import dcc
 from dash import Input, Output
 from dash import dash_table
 from datetime import date
 import plotly.graph_objects as go
-import datetime as dt
 import us
-import model
-
-# from dash import dcc
-# from dash_html_template import Template
-
 
 import data_manager
+import model
 
 # Filter options
 all_options =  ["Housing Price Index", "S&P 500", "Lumber Prices", "Unemployment Rate", "Housing Supply", "Interest Rate", "Building Permits", "Consumer Price Index", "Rent Prices", "Savings", "Rental Vacancies", "Labor Participation"]
@@ -48,15 +39,10 @@ labor_part_data = data_manager.get_labor_part_data()
 
 correlation_data = data_manager.get_correlation_to_hpi()
 
-
-data_manager.get_correlation_to_hpi()
-
-
 """State data"""
 hpi_data_per_state = data_manager.hpi_data_state()
 unemp_data_per_state = data_manager.unemployment_data()
 personal_income = data_manager.personal_income_state()
-# housing_permit = data_manager.housing_permits_state()
 min_wage = data_manager.min_wage_rate()
 rental_vacancy = data_manager.rental_vacancy_rate()
 
@@ -71,7 +57,7 @@ external_stylesheets = [
     }
 ]
 
-app = Dash(__name__, external_stylesheets=external_stylesheets)
+app = Dash(__name__, external_stylesheets=external_stylesheets, title="Housing Market Analysis")
 
 app.layout = html.Div(
     children=[
@@ -224,7 +210,6 @@ app.layout = html.Div(
                             config={"displayModeBar": False},
                             # remove the floating toolbar that Plotly shows by default.
                             className="card",
-                            # style={'display': 'block', 'margin': 'auto', 'marginTop': '50px'}
                                     )
                                 ], style={'width': '80%','display': 'block', 'margin': 'auto', 'marginTop': '20px'}
                             ),
@@ -255,15 +240,13 @@ app.layout = html.Div(
     Input('my-date-picker-range', 'start_date'),
     Input('my-date-picker-range', 'end_date')
 )
-def update_charts(checked_data_sources, start_date, end_date):
+def update_feature_chart(checked_data_sources, start_date, end_date):
     top_features, top_score = model.predict_top_features(checked_data_sources,SP500_data, interest_data, house_supply_data, lumber_data, hpi_data, unemployment_data, 5)
-    #print(top_features)
     data = []
     data.append(go.Bar(
                 {
                     "x": top_features, 
                     "y": top_score,
-                    # "name": "Feature Score",
                 }))
     top_features_figure = {
         "data": data, # Set data equal to line plot data array defined above
@@ -274,8 +257,6 @@ def update_charts(checked_data_sources, start_date, end_date):
                     },
             "xaxis": {'title': 'Feature'},
             "yaxis": {'title': 'Score'},
-            # "xaxis_title": "Feature", 
-            # "yaxis_title": "Score", 
              "colorway": ["#7EC8E3"]
             }
         }
@@ -310,8 +291,6 @@ def update_charts(checked_data_sources, start_date, end_date):
     for item in list(forecast.index.values):
         ts = pd.to_datetime(str(item)) 
         dates.append(ts.strftime('%Y-%m-%d'))
-    # print("The dates are : ")
-    # print(dates)
     """This dynamically adds a new line for each data source checked on the gui"""
     line_plots = []
     for i in range(len(checked_data_sources)):
@@ -405,9 +384,6 @@ def update_charts(checked_data_sources, start_date, end_date):
                     "name": "Consumer Price Index",
                     "line": dict(color="black")
                 }))
-        
-        
-        ###########################################################
         if(checked_data_sources[i] == "Rent Prices"):
             line_plots.append(go.Scatter(
                 {
@@ -455,9 +431,7 @@ def update_charts(checked_data_sources, start_date, end_date):
                     "text": "Normalized Value of Features",
                     "x": 20
                     },
-             #"xaxis": {'range': [dates[0] , dates[1]]},
              "xaxis": {'range': [start_date , end_date], 'title': 'Year'},
-             #"xaxis": {"fixedrange": True},
              "yaxis": {
                  "fixedrange": True,
                  'showticklabels': False,
@@ -476,12 +450,8 @@ def update_charts(checked_data_sources, start_date, end_date):
     Input('my-date-picker-range-state', 'end_date')
 )
 def update_charts_state(dropdown_value, selected_data_sources, start_date, end_date):
-    # model.predict_top_features(checked_data_sources, SP500_data, interest_data, house_supply_data, lumber_data,
-    #                            hpi_data, unemployment_data, 5)
     """This dynamically adds a new line for each data source checked on the gui"""
     line_plots = []
-    #print("state value is ", dropdown_value)
-    #print("seleced data sources ", ",".join(selected_data_sources))
     for i in range(len(selected_data_sources)):
         if (selected_data_sources[i] == "S&P 500"):
             line_plots.append(go.Scatter(
@@ -520,7 +490,6 @@ def update_charts_state(dropdown_value, selected_data_sources, start_date, end_d
                     "line": dict(color="#8073ac")
                 }))
         if (selected_data_sources[i] == "Housing Price Index"):
-            # state_hpi = hpi_data_per_state.loc[hpi_data_per_state['state'] == dropdown_value]
             line_plots.append(go.Scatter(
                 {
                     "x": hpi_data_per_state[dropdown_value]["Date"],
@@ -549,7 +518,6 @@ def update_charts_state(dropdown_value, selected_data_sources, start_date, end_d
                     "line": dict(color="#f4a582")
                 }))
         if (selected_data_sources[i] == "Minimum Wage"):
-            # state_inc = min_wage.loc[min_wage['state'] == dropdown_value]
             line_plots.append(go.Scatter(
                 {
                     "x": min_wage[dropdown_value]["Date"],
@@ -559,7 +527,6 @@ def update_charts_state(dropdown_value, selected_data_sources, start_date, end_d
                     "line": dict(color="#35978f")
                 }))
         if (selected_data_sources[i] == "Rental Vacancy"):
-            # state_inc = rental_vacancy.loc[rental_vacancy['state'] == dropdown_value]
             line_plots.append(go.Scatter(
                 {
                     "x": rental_vacancy[dropdown_value]["Date"],
@@ -576,9 +543,7 @@ def update_charts_state(dropdown_value, selected_data_sources, start_date, end_d
                 "text":"Normalized Value of Features",
                 "x": 20
             },
-                # "xaxis": {'range': [dates[0] , dates[1]]},
                 "xaxis": {'range': [start_date, end_date]},
-                # "xaxis": {"fixedrange": True},
                 "yaxis": {
                     "fixedrange": True,
                     'showticklabels': False},
@@ -594,17 +559,12 @@ def update_charts_state(dropdown_value, selected_data_sources, start_date, end_d
     Input("select-checklist", "value")
 )
 def update_table(checked_data_sources):
-    # n = len(checked_data_sources)
-    # number_of_iterations = int(n*(n-1) / 2)
-
-    df_to_return = pd.DataFrame(columns={"Data_Set_1", "Data_Set_2", "Correlation_Coefficient"})
-    df_to_return = df_to_return[["Data_Set_1", "Data_Set_2", "Correlation_Coefficient"]]
+    df_to_return = pd.DataFrame(columns=["Data_Set_1", "Data_Set_2", "Correlation_Coefficient"])
 
     for i in range(len(checked_data_sources)):
         # This is the syntax to find a row that has the combination of two datasets
         current_row = correlation_data.loc[((correlation_data["Data_Set_2"] == checked_data_sources[i]))]
 
-        """appending the dataframe here is probably cleaner"""
         if not current_row.empty:
             data_set_1 = current_row["Data_Set_1"].to_list()
             data_set_2 = current_row["Data_Set_2"].to_list()
@@ -637,62 +597,4 @@ def hide_unhide_chart(checked_data_sources):
 
 
 if __name__ == "__main__":
-    app.run_server(host="0.0.0.0", debug=False, port="8000")
-
-    """
-            "data": [go.Scatter(
-            {
-                "x": SP500_data["Date"],  #, house_supply_data['DATE']
-                "y": SP500_data["Close*"],  #, house_supply_data['MSACSR']
-                "type": "lines",
-                "name": "S&P 500"
-            },
-        ),
-            go.Scatter(
-            {
-                "x": interest_data["Date"],  #, house_supply_data['DATE']
-                "y": interest_data["Effective Federal Funds Rate"],  #, house_supply_data['MSACSR']
-                "type": "lines",
-                "name": "Interest Rates",
-                "fill": "none",  # ['none', 'tozeroy', 'tozerox', 'tonexty', 'tonextx','toself', 'tonext']
-                "line": dict(color="red")
-            },
-                )
-            ],
-    """
-
-    """
-            # visualization div
-        html.Div(
-            children=[
-                html.Div(
-                    children=dcc.Graph(
-                        id="price-chart",
-                        config={"displayModeBar": False}, # remove the floating toolbar that Plotly shows by default.
-                        figure={
-                            "data": [
-                                {
-                                    "x": data["Date"],
-                                    "y": data["Close*"],
-                                    "type": "lines"
-                                },
-                            ],
-                            "layout": 
-                                {"title": { 
-                                        "text": "S&P 500 Closes",
-                                        "x": 20,
-                                        #"text-align": "center",
-                                        "xanchor": "left"
-                                        },
-                                 "xaxis": {"fixedrange": True},
-                                 "yaxis": {"tickprefix": "$","fixedrange": True},
-                                 "colorway": ["#17b897"]
-                                }
-                        },
-                        className="card",
-                    ),
-                className="wrapper",
-                )
-            ]
-        ),
-    """
+    app.run(host="0.0.0.0", debug=False, port=8000)
